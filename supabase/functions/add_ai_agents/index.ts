@@ -71,12 +71,15 @@ serve(async (req) => {
       const team = availableTeams[i];
       const agentName = aiAgentNames[i] || `AI Agent ${i + 1}`;
 
+      // Generate a proper UUID for the AI agent
+      const aiUserId = crypto.randomUUID();
+
       // Add AI agent to room
       const { data: newAgent, error: agentError } = await supabaseClient
         .from('room_players')
         .insert({
           room_id: roomId,
-          user_id: `ai_agent_${Date.now()}_${i}`, // Unique AI user ID
+          user_id: aiUserId, // Use proper UUID
           nickname: agentName,
           team_id: team.id,
           purse_left_cr: room.purse_cr,
