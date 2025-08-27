@@ -21,7 +21,10 @@ serve(async (req) => {
 
     const { roomId, decision, context } = await req.json();
 
+    console.log('AI Agent request received:', { roomId, decision, context });
+
     if (!roomId || !decision) {
+      console.log('Missing required fields:', { roomId, decision });
       throw new Error('Missing required fields');
     }
 
@@ -170,11 +173,22 @@ Respond in JSON format:
 }
 
 async function makeBiddingDecision(supabaseClient, openAIApiKey, roomId, aiTeams, context) {
+  console.log('makeBiddingDecision called with context:', context);
+  
   const { currentAuction, currentPlayer } = context;
   
-  if (!currentAuction || !currentPlayer) {
-    return { action: 'skip', reasoning: 'No active auction' };
+  if (!currentAuction) {
+    console.log('No currentAuction in context');
+    return { action: 'skip', reasoning: 'No current auction data' };
   }
+  
+  if (!currentPlayer) {
+    console.log('No currentPlayer in context');
+    return { action: 'skip', reasoning: 'No current player data' };
+  }
+  
+  console.log('Current auction data:', currentAuction);
+  console.log('Current player data:', currentPlayer);
 
   // Get current high bidder
   const highBidderTeam = aiTeams.find(t => t.team_id === currentAuction.high_team_id);
