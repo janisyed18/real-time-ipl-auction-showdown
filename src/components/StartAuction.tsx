@@ -141,7 +141,7 @@ export const StartAuction: React.FC<StartAuctionProps> = ({ roomId, isHost, room
           <div className="flex items-center justify-between">
             <CricketCardTitle className="flex items-center gap-2">
               <Gavel className="h-5 w-5" />
-              Nominate Player
+              Auto Auction
             </CricketCardTitle>
             <Badge variant="secondary" className="bg-green-100 text-green-800">
               <Clock className="h-3 w-3 mr-1" />
@@ -150,68 +150,21 @@ export const StartAuction: React.FC<StartAuctionProps> = ({ roomId, isHost, room
           </div>
         </CricketCardHeader>
         <CricketCardContent className="space-y-4">
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search players by name, role, or country..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-
-          {/* Available Players Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
-            {filteredPlayers.slice(0, 12).map((player) => (
-              <div
-                key={player.id}
-                className="border rounded-lg p-3 hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={player.image_url || ''} alt={player.name} />
-                      <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium text-sm">{player.name}</p>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Badge variant="outline" className="text-xs px-1 py-0">
-                          {player.role}
-                        </Badge>
-                        {player.is_overseas && (
-                          <Badge variant="secondary" className="text-xs px-1 py-0">
-                            OS
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-muted-foreground">Base</p>
-                    <p className="font-medium text-sm">₹{player.base_price_cr}Cr</p>
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="w-full mt-2"
-                  onClick={() => handleNominatePlayer(player)}
-                  disabled={nominating || !myTeam}
-                >
-                  Nominate
-                </Button>
+          <div className="text-center space-y-4">
+            <p className="text-muted-foreground">
+              Players are automatically selected for auction. Use the bidding interface to bid or skip.
+            </p>
+            <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Users className="h-4 w-4" />
+                {availablePlayers.length} Players Available
               </div>
-            ))}
-          </div>
-
-          {filteredPlayers.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p>No players found matching your search</p>
+              <div className="flex items-center gap-1">
+                <DollarSign className="h-4 w-4" />
+                Max ₹2Cr Base Price
+              </div>
             </div>
-          )}
+          </div>
         </CricketCardContent>
       </CricketCard>
     );

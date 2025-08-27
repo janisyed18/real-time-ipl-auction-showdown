@@ -243,14 +243,22 @@ export const AuctionInterface: React.FC<AuctionInterfaceProps> = ({
                       placeholder="Enter bid amount"
                     />
                   </div>
-                  <Button
-                    onClick={placeBid}
-                    disabled={isPlacingBid || !bidAmount || parseFloat(bidAmount) <= currentAuction.high_bid_cr}
-                    className="w-full bg-gradient-to-r from-bid-success to-auction-gold"
-                  >
-                    <Gavel className="mr-2 h-4 w-4" />
-                    {isPlacingBid ? 'Placing Bid...' : `Bid ₹${bidAmount} Cr`}
-                  </Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      onClick={placeBid}
+                      disabled={isPlacingBid || !bidAmount || parseFloat(bidAmount) <= currentAuction.high_bid_cr}
+                      className="bg-gradient-to-r from-green-600 to-green-500 text-white"
+                    >
+                      <Gavel className="mr-2 h-4 w-4" />
+                      {isPlacingBid ? 'Bidding...' : 'BID'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="border-red-300 text-red-600 hover:bg-red-50"
+                    >
+                      SKIP
+                    </Button>
+                  </div>
                 </>
               )}
 
@@ -288,63 +296,44 @@ export const AuctionInterface: React.FC<AuctionInterfaceProps> = ({
   }
 
   if (canNominate) {
+    const handleNextPlayer = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('next_player', {
+          body: { roomId }
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Next Player Selected!",
+          description: `${data.player.name} is now up for auction`,
+        });
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    };
+
     return (
       <CricketCard variant="auction" className="mb-6">
         <CricketCardHeader>
-          <CricketCardTitle>Nominate a Player</CricketCardTitle>
+          <CricketCardTitle>Next Player</CricketCardTitle>
         </CricketCardHeader>
         <CricketCardContent>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                Select Player
-              </label>
-              <select
-                className="w-full p-2 border rounded-md bg-background"
-                value={selectedPlayer?.id || ''}
-                onChange={(e) => {
-                  const player = players.find(p => p.id === e.target.value);
-                  setSelectedPlayer(player || null);
-                  if (player) {
-                    setBasePrice(player.base_price_cr.toString());
-                  }
-                }}
-              >
-                <option value="">Choose a player...</option>
-                {players
-                  .filter(p => p.is_marquee) // Show marquee players first
-                  .map(player => (
-                    <option key={player.id} value={player.id}>
-                      {player.name} ({player.role}) - Base: ₹{player.base_price_cr} Cr
-                    </option>
-                  ))}
-              </select>
-            </div>
-
-            {selectedPlayer && (
-              <>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">
-                    Starting Price (₹ Crores)
-                  </label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    min={selectedPlayer.base_price_cr}
-                    value={basePrice}
-                    onChange={(e) => setBasePrice(e.target.value)}
-                  />
-                </div>
-
-                <Button
-                  onClick={nominatePlayer}
-                  disabled={isNominating || !basePrice}
-                  className="w-full bg-gradient-to-r from-primary to-accent"
-                >
-                  {isNominating ? 'Nominating...' : 'Nominate Player'}
-                </Button>
-              </>
-            )}
+          <div className="space-y-4 text-center">
+            <p className="text-muted-foreground">
+              Click below to automatically select the next player for auction
+            </p>
+            <Button
+              onClick={handleNextPlayer}
+              disabled={isNominating}
+              className="w-full bg-gradient-to-r from-primary to-accent"
+            >
+              {isNominating ? 'Selecting...' : 'Select Next Player'}
+            </Button>
           </div>
         </CricketCardContent>
       </CricketCard>
