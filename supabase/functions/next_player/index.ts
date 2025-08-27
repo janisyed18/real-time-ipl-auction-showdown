@@ -109,21 +109,7 @@ serve(async (req) => {
       throw updateError;
     }
 
-    // Insert an initial bid at base price to get things started
-    const { error: bidError } = await supabaseClient
-      .from('bids')
-      .insert({
-        room_id: roomId,
-        player_id: randomPlayer.id,
-        team_id: null, // No specific team - this is just the base price
-        amount_cr: basePrice,
-      });
-
-    // Log bid error but don't fail the function
-    if (bidError) {
-      console.warn('Could not insert initial bid:', bidError);
-    }
-
+    // No initial bid needed - teams will start bidding from base price
     console.log(`Auto-selected player: ${randomPlayer.name} for auction in room ${roomId}`);
 
     return new Response(

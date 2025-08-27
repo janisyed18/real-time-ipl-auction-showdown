@@ -17,6 +17,7 @@ import { AIAgentManager } from '@/components/AIAgentManager';
 import { AIAuctionController } from '@/components/AIAuctionController';
 import { RosterDisplay } from '@/components/RosterDisplay';
 import { StartAuction } from '@/components/StartAuction';
+import { NextPlayer } from '@/components/NextPlayer';
 
 const Room = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -342,6 +343,14 @@ const Room = () => {
               roomId={roomId!} 
               isHost={isHost} 
               roomStatus={room?.status || 'waiting'} 
+            />
+
+            {/* Next Player Component (for host when auction is active and idle) */}
+            <NextPlayer 
+              roomId={roomId!}
+              isHost={isHost}
+              roomStatus={room?.status || 'waiting'}
+              currentAuction={currentAuction}
             />
 
             {/* Auction Interface */}
