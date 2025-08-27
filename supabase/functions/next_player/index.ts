@@ -54,17 +54,28 @@ serve(async (req) => {
       throw new Error('Another player is currently being auctioned');
     }
 
-    // Get all players not yet sold in this room
-    const { data: availablePlayers, error: playersError } = await supabaseClient
+    // Get players already sold in this room
+    const { data: soldPlayers } = await supabaseClient
+      .from('roster')
+      .select('player_id')
+      .eq('room_id', roomId);
+
+    const soldPlayerIds = soldPlayers?.map(p => p.player_id) || [];
+
+    // Get all players
+    const { data: allPlayers, error: playersError } = await supabaseClient
       .from('players')
-      .select('*')
-      .not('id', 'in', `(
-        SELECT player_id FROM roster WHERE room_id = '${roomId}'
-      )`);
+      .select('*');
 
     if (playersError) {
+      console.error('Players query error:', playersError);
       throw new Error('Error fetching available players');
     }
+
+    // Filter out sold players
+    const availablePlayers = allPlayers?.filter(player => 
+      !soldPlayerIds.includes(player.id)
+    ) || [];
 
     if (!availablePlayers || availablePlayers.length === 0) {
       throw new Error('No more players available for auction');
