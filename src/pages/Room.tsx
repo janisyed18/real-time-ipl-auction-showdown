@@ -163,8 +163,9 @@ const Room = () => {
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'current_auction', filter: `room_id=eq.${roomId}` },
         (payload) => {
-          console.log('Auction updated:', payload);
+          console.log('Room: Auction updated via realtime:', payload);
           if (payload.new) {
+            console.log('Room: Setting new auction state:', payload.new);
             setCurrentAuction(payload.new as any);
           }
         }

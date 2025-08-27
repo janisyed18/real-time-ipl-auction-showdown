@@ -28,12 +28,28 @@ export const AIAuctionController: React.FC<AIAuctionControllerProps> = ({
 
   // Monitor auction state for AI actions
   useEffect(() => {
-    if (!isActive || !currentAuction || !roomId) return;
+    console.log('AIAuctionController: Checking state...', {
+      isActive,
+      currentAuction,
+      roomId,
+      phase: currentAuction?.phase,
+      playerId: currentAuction?.current_player_id
+    });
+
+    if (!isActive || !currentAuction || !roomId) {
+      console.log('AIAuctionController: Not active or missing data');
+      return;
+    }
 
     const actionKey = `${currentAuction.phase}_${currentAuction.current_player_id}_${currentAuction.high_bid_cr}`;
     
     // Prevent duplicate actions
-    if (lastActionRef.current === actionKey) return;
+    if (lastActionRef.current === actionKey) {
+      console.log('AIAuctionController: Duplicate action prevented', actionKey);
+      return;
+    }
+    
+    console.log('AIAuctionController: New action needed', actionKey);
     lastActionRef.current = actionKey;
 
     // Clear any existing timeout
@@ -43,9 +59,11 @@ export const AIAuctionController: React.FC<AIAuctionControllerProps> = ({
 
     // Check if we need AI action
     if (currentAuction.phase === 'idle') {
+      console.log('AIAuctionController: Scheduling AI nomination');
       // AI should nominate a player if no human has nominated recently
       scheduleAINomination();
     } else if (currentAuction.phase === 'bidding') {
+      console.log('AIAuctionController: Scheduling AI bidding');
       // AI should consider bidding
       scheduleAIBidding();
     }
@@ -100,21 +118,32 @@ export const AIAuctionController: React.FC<AIAuctionControllerProps> = ({
   };
 
   const scheduleAIBidding = () => {
-    if (!currentAuction?.turn_ends_at) return;
+    console.log('AIAuctionController: scheduleAIBidding called', currentAuction);
+    if (!currentAuction?.turn_ends_at) {
+      console.log('AIAuctionController: No turn_ends_at, skipping AI bidding');
+      return;
+    }
 
     // Calculate when AI should bid (random time before auction ends)
     const auctionEndTime = new Date(currentAuction.turn_ends_at).getTime();
     const now = Date.now();
     const timeRemaining = auctionEndTime - now;
     
-    if (timeRemaining <= 0) return; // Auction already ended
+    console.log('AIAuctionController: Time remaining for AI bid:', timeRemaining);
+    
+    if (timeRemaining <= 0) {
+      console.log('AIAuctionController: Auction already ended');
+      return; // Auction already ended
+    }
 
     // AI bids between 2-6 seconds before auction ends
     const bidDelay = Math.max(1000, timeRemaining - (Math.random() * 4000 + 2000));
     
+    console.log('AIAuctionController: Will attempt AI bid in', bidDelay, 'ms');
+    
     aiTimeoutRef.current = setTimeout(async () => {
       try {
-        console.log('AI considering bid...');
+        console.log('AIAuctionController: AI considering bid...');
 
         // Get current player stats for context
         const currentPlayer = availablePlayers.find(p => p.id === currentAuction.current_player_id);
