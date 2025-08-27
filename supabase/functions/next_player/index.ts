@@ -98,14 +98,30 @@ serve(async (req) => {
         current_player_id: randomPlayer.id,
         base_cr: basePrice,
         high_bid_cr: basePrice,
-        high_team_id: null, // No initial bidder
+        high_team_id: null, // No initial bidder - AI can start bidding
         nominated_by: null, // Auto-selected
         turn_ends_at: turnEndsAt.toISOString(),
+        updated_at: new Date().toISOString(),
       })
       .eq('room_id', roomId);
 
     if (updateError) {
       throw updateError;
+    }
+
+    // Insert an initial bid at base price to get things started
+    const { error: bidError } = await supabaseClient
+      .from('bids')
+      .insert({
+        room_id: roomId,
+        player_id: randomPlayer.id,
+        team_id: null, // No specific team - this is just the base price
+        amount_cr: basePrice,
+      });
+
+    // Log bid error but don't fail the function
+    if (bidError) {
+      console.warn('Could not insert initial bid:', bidError);
     }
 
     console.log(`Auto-selected player: ${randomPlayer.name} for auction in room ${roomId}`);
