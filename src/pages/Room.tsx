@@ -11,6 +11,8 @@ import { useToast } from '@/hooks/use-toast';
 import { TeamSelection } from '@/components/TeamSelection';
 import { RoomHeader } from '@/components/RoomHeader';
 import { ParticipantsList } from '@/components/ParticipantsList';
+import { AuctionInterface } from '@/components/AuctionInterface';
+import { PlayerCard } from '@/components/PlayerCard';
 
 const Room = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -25,11 +27,15 @@ const Room = () => {
     teams,
     myTeam,
     isHost,
+    currentAuction,
+    availablePlayers,
     setRoom,
     setPlayers,
     setTeams,
     setMyTeam,
     setIsHost,
+    setCurrentAuction,
+    setAvailablePlayers,
   } = useAuctionStore();
 
   const [loading, setLoading] = useState(true);
@@ -41,6 +47,7 @@ const Room = () => {
     if (!roomId || !user) return;
     
     loadRoomData();
+    loadAvailablePlayers();
     setupRealtimeSubscriptions();
   }, [roomId, user]);
 
@@ -78,6 +85,17 @@ const Room = () => {
       if (playersError) throw playersError;
       setPlayers(playersData);
 
+      // Load current auction state
+      const { data: auctionData } = await supabase
+        .from('current_auction')
+        .select('*')
+        .eq('room_id', roomId)
+        .single();
+
+      if (auctionData) {
+        setCurrentAuction(auctionData as any);
+      }
+
       // Check if current user is already in the room
       const myPlayer = playersData.find(p => p.user_id === user?.id);
       if (myPlayer) {
@@ -100,6 +118,21 @@ const Room = () => {
     }
   };
 
+  const loadAvailablePlayers = async () => {
+    try {
+      const { data: playersData, error: playersError } = await supabase
+        .from('players')
+        .select('*, stats:stats_t20(*)')
+        .order('is_marquee', { ascending: false })
+        .order('base_price_cr', { ascending: false });
+
+      if (playersError) throw playersError;
+      setAvailablePlayers(playersData as any); // Type assertion for database response
+    } catch (error) {
+      console.error('Error loading players:', error);
+    }
+  };
+
   const setupRealtimeSubscriptions = () => {
     const roomChannel = supabase
       .channel(`room_${roomId}`)
@@ -116,6 +149,15 @@ const Room = () => {
           console.log('Room updated:', payload);
           if (payload.new) {
             setRoom(payload.new as any);
+          }
+        }
+      )
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'current_auction', filter: `room_id=eq.${roomId}` },
+        (payload) => {
+          console.log('Auction updated:', payload);
+          if (payload.new) {
+            setCurrentAuction(payload.new as any);
           }
         }
       )
@@ -248,7 +290,17 @@ const Room = () => {
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-6">
+            {/* Auction Interface */}
+            {room?.status === 'active' && (
+              <AuctionInterface
+                roomId={roomId!}
+                myTeam={myTeam}
+                players={availablePlayers}
+              />
+            )}
+
+            {/* Room Status */}
             <CricketCard variant="auction">
               <CricketCardHeader>
                 <div className="flex items-center justify-between">
@@ -314,12 +366,30 @@ const Room = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-8">
-                    <Trophy className="h-16 w-16 text-primary mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Auction Active</h3>
-                    <p className="text-muted-foreground">
-                      The auction is currently in progress...
-                    </p>
+                  <div className="space-y-4">
+                    {/* Available Players for Nomination */}
+                    {room?.status === 'active' && currentAuction?.phase === 'idle' && (
+                      <div>
+                        <h4 className="font-semibold mb-3">Available Players</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto">
+                          {availablePlayers.slice(0, 10).map((player) => (
+                            <PlayerCard
+                              key={player.id}
+                              player={player}
+                              variant="compact"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {room?.status === 'active' && currentAuction?.phase === 'bidding' && (
+                      <div className="text-center py-4">
+                        <p className="text-muted-foreground">
+                          Use the auction interface above to place your bids
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </CricketCardContent>

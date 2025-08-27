@@ -1,1 +1,13 @@
 project_id = "xromfzhdjkhnukawxsjf"
+
+[functions.join_room]
+verify_jwt = false
+
+[functions.nominate_player]
+verify_jwt = false
+
+[functions.place_bid]
+verify_jwt = false
+
+[functions.finalize_sale]
+verify_jwt = false
