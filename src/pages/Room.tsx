@@ -172,6 +172,7 @@ const Room = () => {
         (payload) => {
           console.log('Room updated:', payload);
           if (payload.new) {
+            console.log('Updating room state to:', payload.new);
             setRoom(payload.new as any);
           }
         }
