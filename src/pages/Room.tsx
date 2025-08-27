@@ -15,6 +15,7 @@ import { AuctionInterface } from '@/components/AuctionInterface';
 import { PlayerCard } from '@/components/PlayerCard';
 import { AIAgentManager } from '@/components/AIAgentManager';
 import { AIAuctionController } from '@/components/AIAuctionController';
+import { StartAuction } from '@/components/StartAuction';
 
 const Room = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -51,6 +52,11 @@ const Room = () => {
     loadRoomData();
     loadAvailablePlayers();
     setupRealtimeSubscriptions();
+    
+    // Clean up on unmount
+    return () => {
+      // Cleanup will be handled by the realtime subscriptions
+    };
   }, [roomId, user]);
 
   const loadRoomData = async () => {
@@ -306,6 +312,13 @@ const Room = () => {
 
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Start Auction Component */}
+            <StartAuction 
+              roomId={roomId!} 
+              isHost={isHost} 
+              roomStatus={room?.status || 'waiting'} 
+            />
+
             {/* Auction Interface */}
             {room?.status === 'active' && (
               <AuctionInterface
