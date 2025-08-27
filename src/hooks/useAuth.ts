@@ -27,38 +27,42 @@ export function useAuth() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signInAnonymously = async () => {
-    // Try anonymous sign-in first
-    const { error: anonError } = await supabase.auth.signInAnonymously();
-    if (!anonError) {
-      return { error: null };
-    }
-
-    // If anonymous fails, try with a temporary email/password using a valid domain
-    const tempEmail = `temp_${Date.now()}@example.com`;
-    const tempPassword = `temp_${Math.random().toString(36).substring(7)}`;
-    
-    const { error: signUpError } = await supabase.auth.signUp({
-      email: tempEmail,
-      password: tempPassword,
-      options: {
-        emailRedirectTo: `${window.location.origin}/`
-      }
-    });
-
-    return { error: signUpError || anonError };
-  };
-
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     return { error };
+  };
+
+  const hasRole = async (role: 'admin' | 'moderator' | 'user') => {
+    if (!user) return false;
+    
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', role)
+      .maybeSingle();
+
+    return !error && !!data;
+  };
+
+  const getProfile = async () => {
+    if (!user) return null;
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    return error ? null : data;
   };
 
   return {
     user,
     session,
     loading,
-    signInAnonymously,
     signOut,
+    hasRole,
+    getProfile,
   };
 }
