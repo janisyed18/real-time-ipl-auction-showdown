@@ -18,5 +18,8 @@ verify_jwt = false
 [functions.ai_agent]
 verify_jwt = false
 
+[functions.free_ai_agent]
+verify_jwt = false
+
 [functions.start_auction]
 verify_jwt = false

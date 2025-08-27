@@ -70,17 +70,17 @@ export const AIAuctionController: React.FC<AIAuctionControllerProps> = ({
   }, [currentAuction, isActive, roomId]);
 
   const scheduleAINomination = () => {
-    // Wait 3-8 seconds before AI nominates (random delay for realism)
-    const delay = Math.random() * 5000 + 3000;
+    // Wait 2-4 seconds before free AI nominates (faster since it's free!)
+    const delay = Math.random() * 2000 + 2000;
     
     aiTimeoutRef.current = setTimeout(async () => {
       try {
-        console.log('AI attempting to nominate player...');
+        console.log('Free AI attempting to nominate player...');
         
-        const { data, error } = await supabase.functions.invoke('ai_agent', {
+        const { data, error } = await supabase.functions.invoke('free_ai_agent', {
           body: {
             roomId,
-            decision: 'nominate',
+            decision: 'nomination',
             context: {
               availablePlayers: availablePlayers.slice(0, 20), // Send top 20 for performance
               overseasMax: 8, // Default from room settings
@@ -90,28 +90,28 @@ export const AIAuctionController: React.FC<AIAuctionControllerProps> = ({
 
         if (error) throw error;
 
-        if (data.result?.action === 'nominate') {
-          console.log('AI nominating:', data.result);
+        if (data?.action === 'nominate') {
+          console.log('Free AI nominating:', data);
           
           // Execute the nomination through our existing function
           const { error: nominateError } = await supabase.functions.invoke('nominate_player', {
             body: {
               roomId,
-              playerId: data.result.player_id,
-              nominatedBy: data.result.team_id,
-              basePrice: data.result.starting_price,
+              playerId: data.playerId,
+              nominatedBy: data.teamId,
+              basePrice: data.startingPrice,
             },
           });
 
           if (nominateError) throw nominateError;
 
           toast({
-            title: "AI Nomination",
-            description: `AI agent nominated a player for ₹${data.result.starting_price} Cr`,
+            title: "Free AI Nomination",
+            description: `Free AI nominated a player for ₹${data.startingPrice} Cr`,
           });
         }
       } catch (error: any) {
-        console.error('AI nomination error:', error);
+        console.error('Free AI nomination error:', error);
         // Don't show error toast for AI failures, just log them
       }
     }, delay);
@@ -149,10 +149,10 @@ export const AIAuctionController: React.FC<AIAuctionControllerProps> = ({
         const currentPlayer = availablePlayers.find(p => p.id === currentAuction.current_player_id);
         const playerStats = (currentPlayer as any)?.stats?.[0];
 
-        const { data, error } = await supabase.functions.invoke('ai_agent', {
+        const { data, error } = await supabase.functions.invoke('free_ai_agent', {
           body: {
             roomId,
-            decision: 'bid',
+            decision: 'bidding',
             context: {
               currentAuction,
               currentPlayer,
@@ -164,26 +164,26 @@ export const AIAuctionController: React.FC<AIAuctionControllerProps> = ({
 
         if (error) throw error;
 
-        if (data.result?.action === 'bid') {
-          console.log('AI placing bid:', data.result);
+        if (data?.action === 'bid') {
+          console.log('Free AI placing bid:', data);
           
           // Execute the bid through our existing function
           const { error: bidError } = await supabase.functions.invoke('place_bid', {
             body: {
               roomId,
-              teamId: data.result.team_id,
-              bidAmount: data.result.bid_amount,
+              teamId: data.teamId,
+              bidAmount: data.bidAmount,
             },
           });
 
           if (bidError) throw bidError;
 
           toast({
-            title: "AI Bid",
-            description: `AI agent bid ₹${data.result.bid_amount} Cr`,
+            title: "Free AI Bid",
+            description: `Free AI bid ₹${data.bidAmount} Cr`,
           });
         } else {
-          console.log('AI decided not to bid:', data.result?.reasoning);
+          console.log('Free AI decided not to bid:', data?.reasoning);
         }
       } catch (error: any) {
         console.error('AI bidding error:', error);
