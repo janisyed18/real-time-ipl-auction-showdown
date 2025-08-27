@@ -70,8 +70,8 @@ export const AIAuctionController: React.FC<AIAuctionControllerProps> = ({
   }, [currentAuction, isActive, roomId]);
 
   const scheduleAINomination = () => {
-    // Wait 2-4 seconds before free AI nominates (faster since it's free!)
-    const delay = Math.random() * 2000 + 2000;
+    // MUCH faster AI with 1-2 seconds delay for immediate response
+    const delay = Math.random() * 1000 + 1000; // 1-2 seconds only
     
     aiTimeoutRef.current = setTimeout(async () => {
       try {
@@ -82,19 +82,23 @@ export const AIAuctionController: React.FC<AIAuctionControllerProps> = ({
             roomId,
             decision: 'nomination',
             context: {
-              availablePlayers: availablePlayers.slice(0, 20), // Send top 20 for performance
-              overseasMax: 8, // Default from room settings
+              availablePlayers: availablePlayers.slice(0, 50), // Send more players for variety
             },
           },
         });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Free AI nomination error:', error);
+          return;
+        }
+
+        console.log('Free AI nomination response:', data);
 
         if (data?.action === 'nominate') {
           console.log('Free AI nominating:', data);
           
           // Execute the nomination through our existing function
-          const { error: nominateError } = await supabase.functions.invoke('nominate_player', {
+          const { data: nominationResult, error: nominateError } = await supabase.functions.invoke('nominate_player', {
             body: {
               roomId,
               playerId: data.playerId,
@@ -103,16 +107,18 @@ export const AIAuctionController: React.FC<AIAuctionControllerProps> = ({
             },
           });
 
-          if (nominateError) throw nominateError;
-
-          toast({
-            title: "Free AI Nomination",
-            description: `Free AI nominated a player for ₹${data.startingPrice} Cr`,
-          });
+          if (nominateError) {
+            console.error('Nomination execution error:', nominateError);
+          } else {
+            console.log('Free AI nomination executed successfully:', nominationResult);
+            toast({
+              title: "Free AI Nomination",
+              description: `Free AI nominated a player for ₹${data.startingPrice} Cr`,
+            });
+          }
         }
       } catch (error: any) {
         console.error('Free AI nomination error:', error);
-        // Don't show error toast for AI failures, just log them
       }
     }, delay);
   };

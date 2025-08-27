@@ -44,6 +44,11 @@ serve(async (req) => {
         high_team_id: null,
         nominated_by: null,
         turn_ends_at: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { 
+        onConflict: 'room_id',
+        ignoreDuplicates: false 
       });
 
     if (auctionError) throw auctionError;
