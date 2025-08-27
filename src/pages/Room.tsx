@@ -143,7 +143,10 @@ const Room = () => {
     try {
       const { data: playersData, error: playersError } = await supabase
         .from('players')
-        .select('*, stats:stats_t20(*)')
+        .select(`
+          *,
+          stats:stats_t20(*)
+        `)
         .order('is_marquee', { ascending: false })
         .order('base_price_cr', { ascending: false });
 
