@@ -61,12 +61,30 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				'cricket-green': 'hsl(var(--cricket-green))',
+				'cricket-field': 'hsl(var(--cricket-field))',
+				'auction-gold': 'hsl(var(--auction-gold))',
+				'auction-glow': 'hsl(var(--auction-glow))',
+				'bid-success': 'hsl(var(--bid-success))',
+				'bid-danger': 'hsl(var(--bid-danger))',
+				'team-primary': 'hsl(var(--team-primary))',
+				'team-secondary': 'hsl(var(--team-secondary))'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
+			},
+			backgroundImage: {
+				'gradient-auction': 'var(--gradient-auction)',
+				'gradient-field': 'var(--gradient-field)',
+				'gradient-bid': 'var(--gradient-bid)',
+			},
+			boxShadow: {
+				'auction': 'var(--shadow-auction)',
+				'glow': 'var(--shadow-glow)',
+				'card': 'var(--shadow-card)',
 			},
 			keyframes: {
 				'accordion-down': {

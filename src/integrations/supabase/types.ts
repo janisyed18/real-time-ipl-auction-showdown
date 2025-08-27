@@ -14,7 +14,402 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      auction_rooms: {
+        Row: {
+          accelerated_rounds: boolean | null
+          bid_turn_seconds: number | null
+          code: string
+          created_at: string
+          host_user_id: string
+          id: string
+          nomination_seconds: number | null
+          overseas_max: number | null
+          purse_cr: number | null
+          rtm_enabled: boolean | null
+          squad_max: number | null
+          squad_min: number | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          accelerated_rounds?: boolean | null
+          bid_turn_seconds?: number | null
+          code: string
+          created_at?: string
+          host_user_id: string
+          id?: string
+          nomination_seconds?: number | null
+          overseas_max?: number | null
+          purse_cr?: number | null
+          rtm_enabled?: boolean | null
+          squad_max?: number | null
+          squad_min?: number | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          accelerated_rounds?: boolean | null
+          bid_turn_seconds?: number | null
+          code?: string
+          created_at?: string
+          host_user_id?: string
+          id?: string
+          nomination_seconds?: number | null
+          overseas_max?: number | null
+          purse_cr?: number | null
+          rtm_enabled?: boolean | null
+          squad_max?: number | null
+          squad_min?: number | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      bids: {
+        Row: {
+          amount_cr: number
+          created_at: string
+          id: string
+          player_id: string
+          room_id: string
+          team_id: string
+        }
+        Insert: {
+          amount_cr: number
+          created_at?: string
+          id?: string
+          player_id: string
+          room_id: string
+          team_id: string
+        }
+        Update: {
+          amount_cr?: number
+          created_at?: string
+          id?: string
+          player_id?: string
+          room_id?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bids_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bids_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "auction_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bids_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      current_auction: {
+        Row: {
+          base_cr: number | null
+          created_at: string
+          current_player_id: string | null
+          high_bid_cr: number | null
+          high_team_id: string | null
+          nominated_by: string | null
+          phase: string
+          room_id: string
+          turn_ends_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          base_cr?: number | null
+          created_at?: string
+          current_player_id?: string | null
+          high_bid_cr?: number | null
+          high_team_id?: string | null
+          nominated_by?: string | null
+          phase?: string
+          room_id: string
+          turn_ends_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          base_cr?: number | null
+          created_at?: string
+          current_player_id?: string | null
+          high_bid_cr?: number | null
+          high_team_id?: string | null
+          nominated_by?: string | null
+          phase?: string
+          room_id?: string
+          turn_ends_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "current_auction_current_player_id_fkey"
+            columns: ["current_player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "current_auction_high_team_id_fkey"
+            columns: ["high_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "current_auction_nominated_by_fkey"
+            columns: ["nominated_by"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "current_auction_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: true
+            referencedRelation: "auction_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      players: {
+        Row: {
+          base_price_cr: number
+          country: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          is_marquee: boolean | null
+          is_overseas: boolean
+          name: string
+          role: string
+        }
+        Insert: {
+          base_price_cr?: number
+          country?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_marquee?: boolean | null
+          is_overseas?: boolean
+          name: string
+          role: string
+        }
+        Update: {
+          base_price_cr?: number
+          country?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_marquee?: boolean | null
+          is_overseas?: boolean
+          name?: string
+          role?: string
+        }
+        Relationships: []
+      }
+      room_players: {
+        Row: {
+          created_at: string
+          id: string
+          nickname: string
+          overseas_in_squad: number | null
+          purse_left_cr: number
+          room_id: string
+          slots_left: number
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nickname: string
+          overseas_in_squad?: number | null
+          purse_left_cr: number
+          room_id: string
+          slots_left: number
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nickname?: string
+          overseas_in_squad?: number | null
+          purse_left_cr?: number
+          room_id?: string
+          slots_left?: number
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_players_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "auction_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_players_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roster: {
+        Row: {
+          created_at: string
+          id: string
+          is_overseas: boolean
+          player_id: string
+          price_cr: number
+          role: string
+          room_id: string
+          team_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_overseas: boolean
+          player_id: string
+          price_cr: number
+          role: string
+          room_id: string
+          team_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_overseas?: boolean
+          player_id?: string
+          price_cr?: number
+          role?: string
+          room_id?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roster_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roster_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "auction_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roster_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stats_t20: {
+        Row: {
+          batting_avg: number | null
+          batting_sr: number | null
+          boundary_pct: number | null
+          bowling_econ: number | null
+          bowling_sr: number | null
+          created_at: string
+          death_econ: number | null
+          id: string
+          matches_played: number | null
+          player_id: string
+          pp_sr: number | null
+          recent_form: number | null
+          updated_at: string
+        }
+        Insert: {
+          batting_avg?: number | null
+          batting_sr?: number | null
+          boundary_pct?: number | null
+          bowling_econ?: number | null
+          bowling_sr?: number | null
+          created_at?: string
+          death_econ?: number | null
+          id?: string
+          matches_played?: number | null
+          player_id: string
+          pp_sr?: number | null
+          recent_form?: number | null
+          updated_at?: string
+        }
+        Update: {
+          batting_avg?: number | null
+          batting_sr?: number | null
+          boundary_pct?: number | null
+          bowling_econ?: number | null
+          bowling_sr?: number | null
+          created_at?: string
+          death_econ?: number | null
+          id?: string
+          matches_played?: number | null
+          player_id?: string
+          pp_sr?: number | null
+          recent_form?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stats_t20_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: true
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          logo_url: string | null
+          primary_color: string | null
+          secondary_color: string | null
+          short_name: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id?: string
+          logo_url?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          short_name: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          logo_url?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          short_name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
