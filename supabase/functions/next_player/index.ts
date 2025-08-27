@@ -44,10 +44,15 @@ serve(async (req) => {
       .from('current_auction')
       .select('*')
       .eq('room_id', roomId)
-      .single();
+      .maybeSingle(); // Use maybeSingle to handle missing records
 
-    if (auctionError || !currentAuction) {
-      throw new Error('Auction state not found');
+    if (auctionError) {
+      console.error('Auction query error:', auctionError);
+      throw new Error('Error fetching auction state');
+    }
+
+    if (!currentAuction) {
+      throw new Error('Auction state not found - start the auction first');
     }
 
     if (currentAuction.phase !== 'idle') {

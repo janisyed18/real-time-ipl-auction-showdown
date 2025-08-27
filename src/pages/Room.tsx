@@ -18,6 +18,7 @@ import { AIAuctionController } from '@/components/AIAuctionController';
 import { RosterDisplay } from '@/components/RosterDisplay';
 import { StartAuction } from '@/components/StartAuction';
 import { NextPlayer } from '@/components/NextPlayer';
+import { QuickAddAI } from '@/components/QuickAddAI';
 
 const Room = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -102,10 +103,13 @@ const Room = () => {
         .from('current_auction')
         .select('*')
         .eq('room_id', roomId)
-        .single();
+        .maybeSingle(); // Use maybeSingle to handle case where no record exists
 
       if (auctionData) {
         setCurrentAuction(auctionData as any);
+      } else {
+        // No current auction state exists yet
+        setCurrentAuction(null);
       }
 
       // Load roster
@@ -343,6 +347,14 @@ const Room = () => {
               roomId={roomId!} 
               isHost={isHost} 
               roomStatus={room?.status || 'waiting'} 
+            />
+
+            {/* Quick Add AI Component (for testing) */}
+            <QuickAddAI 
+              roomId={roomId!}
+              isHost={isHost}
+              playersCount={players.length}
+              onAgentsAdded={loadRoomData}
             />
 
             {/* Next Player Component (for host when auction is active and idle) */}

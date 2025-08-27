@@ -71,13 +71,33 @@ serve(async (req) => {
 });
 
 async function makeNominationDecision(supabaseClient: any, roomId: string, aiTeams: any[]) {
+  if (!aiTeams || aiTeams.length === 0) {
+    return {
+      action: 'skip',
+      reasoning: 'No AI teams available to nominate'
+    };
+  }
+
   // Get available players (not in this room's roster)
+  const { data: rosterPlayers } = await supabaseClient
+    .from('roster')
+    .select('player_id')
+    .eq('room_id', roomId);
+
+  const soldPlayerIds = rosterPlayers?.map((r: any) => r.player_id) || [];
+
   const { data: availablePlayers, error: playersError } = await supabaseClient
     .from('players')
     .select('*')
-    .not('id', 'in', `(SELECT player_id FROM rosters WHERE room_id = '${roomId}')`);
+    .not('id', 'in', `(${soldPlayerIds.length > 0 ? soldPlayerIds.join(',') : 'null'})`);
 
-  if (playersError) throw playersError;
+  if (playersError) {
+    console.error('Error fetching available players:', playersError);
+    return {
+      action: 'skip',
+      reasoning: 'Error fetching available players'
+    };
+  }
 
   if (!availablePlayers || availablePlayers.length === 0) {
     return {
