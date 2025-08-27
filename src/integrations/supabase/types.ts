@@ -466,6 +466,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_room_ids: {
+        Args: { _user_id: string }
+        Returns: {
+          room_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
