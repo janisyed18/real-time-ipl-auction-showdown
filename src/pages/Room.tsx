@@ -15,6 +15,7 @@ import { AuctionInterface } from '@/components/AuctionInterface';
 import { PlayerCard } from '@/components/PlayerCard';
 import { AIAgentManager } from '@/components/AIAgentManager';
 import { AIAuctionController } from '@/components/AIAuctionController';
+import { RosterDisplay } from '@/components/RosterDisplay';
 import { StartAuction } from '@/components/StartAuction';
 
 const Room = () => {
@@ -32,6 +33,7 @@ const Room = () => {
     isHost,
     currentAuction,
     availablePlayers,
+    roster,
     setRoom,
     setPlayers,
     setTeams,
@@ -39,6 +41,7 @@ const Room = () => {
     setIsHost,
     setCurrentAuction,
     setAvailablePlayers,
+    setRoster,
   } = useAuctionStore();
 
   const [loading, setLoading] = useState(true);
@@ -102,6 +105,16 @@ const Room = () => {
 
       if (auctionData) {
         setCurrentAuction(auctionData as any);
+      }
+
+      // Load roster
+      const { data: rosterData } = await supabase
+        .from('roster')
+        .select('*')
+        .eq('room_id', roomId);
+
+      if (rosterData) {
+        setRoster(rosterData);
       }
 
       // Check if current user is already in the room
@@ -168,6 +181,13 @@ const Room = () => {
             console.log('Room: Setting new current auction state:', payload.new);
             setCurrentAuction(payload.new as any);
           }
+        }
+      )
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'roster', filter: `room_id=eq.${roomId}` },
+        (payload) => {
+          console.log('Roster updated:', payload);
+          loadRoomData(); // Refresh room data to get updated roster
         }
       )
       .subscribe();
@@ -328,6 +348,14 @@ const Room = () => {
                 players={availablePlayers}
               />
             )}
+
+            {/* Roster Display */}
+            <RosterDisplay 
+              roster={roster}
+              players={availablePlayers}
+              teams={teams}
+              myTeam={myTeam}
+            />
 
             {/* Room Status */}
             <CricketCard variant="auction">
