@@ -24,11 +24,14 @@ export const StartAuction: React.FC<StartAuctionProps> = ({ roomId, isHost, room
   const [nominating, setNominating] = useState(false);
 
   const handleStartAuction = async () => {
+    console.log('Starting auction for room:', roomId);
     setStarting(true);
     try {
       const { data, error } = await supabase.functions.invoke('start_auction', {
         body: { roomId }
       });
+
+      console.log('Start auction response:', { data, error });
 
       if (error) throw error;
 
@@ -37,6 +40,7 @@ export const StartAuction: React.FC<StartAuctionProps> = ({ roomId, isHost, room
         description: "The auction is now live. Players can start nominating.",
       });
     } catch (error: any) {
+      console.error('Start auction error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to start auction",
