@@ -389,16 +389,6 @@ const Room = () => {
                         }
                       </p>
                       
-                      {canStartAuction && (
-                        <Button 
-                          onClick={startAuction}
-                          size="lg"
-                          className="bg-gradient-to-r from-primary to-accent"
-                        >
-                          <Trophy className="mr-2 h-5 w-5" />
-                          Start Auction
-                        </Button>
-                      )}
                     </div>
 
                     {/* Room Settings */}

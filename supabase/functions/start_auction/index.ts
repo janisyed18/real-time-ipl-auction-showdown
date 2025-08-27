@@ -37,7 +37,7 @@ serve(async (req) => {
       .from('current_auction')
       .upsert({
         room_id: roomId,
-        phase: 'nomination',
+        phase: 'idle',
         current_player_id: null,
         base_cr: 0,
         high_bid_cr: 0,
