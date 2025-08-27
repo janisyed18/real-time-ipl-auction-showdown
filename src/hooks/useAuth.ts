@@ -34,13 +34,16 @@ export function useAuth() {
       return { error: null };
     }
 
-    // If anonymous fails, try with a temporary email/password
-    const tempEmail = `temp_${Date.now()}@auction.local`;
+    // If anonymous fails, try with a temporary email/password using a valid domain
+    const tempEmail = `temp_${Date.now()}@example.com`;
     const tempPassword = `temp_${Math.random().toString(36).substring(7)}`;
     
     const { error: signUpError } = await supabase.auth.signUp({
       email: tempEmail,
       password: tempPassword,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`
+      }
     });
 
     return { error: signUpError || anonError };

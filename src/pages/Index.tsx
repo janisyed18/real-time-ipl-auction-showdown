@@ -13,10 +13,10 @@ const Index = () => {
   const [isSigningIn, setIsSigningIn] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !user && !isSigningIn) {
       handleSignIn();
     }
-  }, [loading, user]);
+  }, [loading, user, isSigningIn]);
 
   const handleSignIn = async () => {
     if (isSigningIn) return; // Prevent multiple calls
@@ -28,12 +28,20 @@ const Index = () => {
         console.error('Error signing in:', error);
         toast({
           title: "Authentication Error",
-          description: "Please try refreshing the page. Using temporary authentication.",
+          description: "Please try refreshing the page or continue without authentication.",
           variant: "destructive",
         });
+        // Don't block the UI if auth fails - let users proceed
+        setIsSigningIn(false);
+        return;
       }
     } catch (err) {
       console.error('Unexpected error during sign-in:', err);
+      toast({
+        title: "Authentication Error", 
+        description: "Authentication failed. You can still browse the app.",
+        variant: "destructive",
+      });
     } finally {
       setIsSigningIn(false);
     }
@@ -47,7 +55,7 @@ const Index = () => {
     navigate('/join-room');
   };
 
-  if (loading || isSigningIn) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
