@@ -1,7 +1,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { CricketCard, CricketCardContent, CricketCardHeader, CricketCardTitle } from '@/components/ui/cricket-card';
-import { Crown, Users, DollarSign, Trophy } from 'lucide-react';
+import { Crown, Users, DollarSign, Trophy, Bot } from 'lucide-react';
 import { RoomPlayer, Team } from '@/types/auction';
 
 interface ParticipantsListProps {
@@ -36,26 +36,32 @@ export const ParticipantsList: React.FC<ParticipantsListProps> = ({
             >
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
-                  {player.team?.logo_url ? (
-                    <img 
-                      src={player.team.logo_url} 
-                      alt={`${player.team.full_name} logo`}
-                      className="w-8 h-8 object-contain"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                      }}
-                    />
-                  ) : null}
-                  <div 
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${player.team?.logo_url ? 'hidden' : ''}`}
-                    style={{ 
-                      backgroundColor: player.team?.primary_color || '#6B7280',
-                      color: player.team?.secondary_color || '#FFFFFF'
-                    }}
-                  >
-                    {player.team?.short_name}
-                  </div>
+                  {player.is_ai ? (
+                    <Bot className="h-4 w-4 text-purple-600" />
+                  ) : (
+                    <>
+                      {player.team?.logo_url ? (
+                        <img 
+                          src={player.team.logo_url} 
+                          alt={`${player.team.full_name} logo`}
+                          className="w-8 h-8 object-contain"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : null}
+                      <div 
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${player.team?.logo_url ? 'hidden' : ''}`}
+                        style={{ 
+                          backgroundColor: player.team?.primary_color || '#6B7280',
+                          color: player.team?.secondary_color || '#FFFFFF'
+                        }}
+                      >
+                        {player.team?.short_name}
+                      </div>
+                    </>
+                  )}
                 </div>
                 
                 <div>
@@ -64,7 +70,11 @@ export const ParticipantsList: React.FC<ParticipantsListProps> = ({
                     {player.team_id === myTeam?.id && (
                       <Badge variant="secondary" className="text-xs">You</Badge>
                     )}
-                    {/* Add host indicator if needed */}
+                    {player.is_ai && (
+                      <Badge variant="outline" className="text-xs border-purple-500 text-purple-700">
+                        AI
+                      </Badge>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {player.team?.short_name}

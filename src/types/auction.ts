@@ -59,6 +59,7 @@ export interface RoomPlayer {
   purse_left_cr: number;
   slots_left: number;
   overseas_in_squad: number;
+  is_ai?: boolean;
   created_at: string;
 }
 

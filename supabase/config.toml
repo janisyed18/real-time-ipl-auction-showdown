@@ -11,3 +11,9 @@ verify_jwt = false
 
 [functions.finalize_sale]
 verify_jwt = false
+
+[functions.add_ai_agents]
+verify_jwt = false
+
+[functions.ai_agent]
+verify_jwt = false

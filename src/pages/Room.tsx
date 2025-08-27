@@ -13,6 +13,8 @@ import { RoomHeader } from '@/components/RoomHeader';
 import { ParticipantsList } from '@/components/ParticipantsList';
 import { AuctionInterface } from '@/components/AuctionInterface';
 import { PlayerCard } from '@/components/PlayerCard';
+import { AIAgentManager } from '@/components/AIAgentManager';
+import { AIAuctionController } from '@/components/AIAuctionController';
 
 const Room = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -280,8 +282,21 @@ const Room = () => {
         )}
 
         <div className="grid lg:grid-cols-3 gap-6 mt-6">
+          {/* AI Auction Controller (invisible component) */}
+          <AIAuctionController roomId={roomId!} isActive={room?.status === 'active'} />
+          
           {/* Participants */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-4">
+            {/* AI Agent Manager (only for host in waiting state) */}
+            {room?.status === 'waiting' && (
+              <AIAgentManager
+                roomId={roomId!}
+                players={players}
+                isHost={isHost}
+                onAgentsAdded={loadRoomData}
+              />
+            )}
+            
             <ParticipantsList 
               players={players}
               myTeam={myTeam}
