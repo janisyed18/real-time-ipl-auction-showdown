@@ -29,12 +29,31 @@ const CreateRoom = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please wait for authentication to complete.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.nickname.trim()) {
+      toast({
+        title: "Nickname Required",
+        description: "Please enter your nickname.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsCreating(true);
     try {
       // Generate 6-digit room code
       const code = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      console.log('Creating room with:', { code, userId: user.id, ...formData });
       
       // Create auction room
       const { data: room, error: roomError } = await supabase
@@ -54,25 +73,43 @@ const CreateRoom = () => {
         .select()
         .single();
 
-      if (roomError) throw roomError;
+      if (roomError) {
+        console.error('Room creation error:', roomError);
+        throw roomError;
+      }
+
+      console.log('Room created successfully:', room);
 
       toast({
         title: "Room Created!",
         description: `Room code: ${code}`,
       });
 
-      navigate(`/room/${room.id}`);
-    } catch (error) {
+      // Navigate to room with nickname parameter
+      navigate(`/room/${room.id}?nickname=${encodeURIComponent(formData.nickname)}`);
+    } catch (error: any) {
       console.error('Error creating room:', error);
       toast({
         title: "Error",
-        description: "Failed to create room. Please try again.",
+        description: error.message || "Failed to create room. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsCreating(false);
     }
   };
+
+  // Show loading state while authenticating
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Setting up authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
@@ -213,7 +250,7 @@ const CreateRoom = () => {
               <Button 
                 type="submit" 
                 className="w-full bg-gradient-to-r from-primary to-accent"
-                disabled={isCreating || !formData.nickname}
+                disabled={isCreating || !formData.nickname.trim() || !user}
               >
                 {isCreating ? "Creating Room..." : "Create Auction Room"}
               </Button>

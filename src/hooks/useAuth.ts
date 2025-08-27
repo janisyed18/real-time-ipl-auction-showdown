@@ -28,8 +28,22 @@ export function useAuth() {
   }, []);
 
   const signInAnonymously = async () => {
-    const { error } = await supabase.auth.signInAnonymously();
-    return { error };
+    // Try anonymous sign-in first
+    const { error: anonError } = await supabase.auth.signInAnonymously();
+    if (!anonError) {
+      return { error: null };
+    }
+
+    // If anonymous fails, try with a temporary email/password
+    const tempEmail = `temp_${Date.now()}@auction.local`;
+    const tempPassword = `temp_${Math.random().toString(36).substring(7)}`;
+    
+    const { error: signUpError } = await supabase.auth.signUp({
+      email: tempEmail,
+      password: tempPassword,
+    });
+
+    return { error: signUpError || anonError };
   };
 
   const signOut = async () => {

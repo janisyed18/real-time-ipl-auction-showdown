@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import { CricketCard, CricketCardContent, CricketCardDescription, CricketCardHeader, CricketCardTitle } from '@/components/ui/cricket-card';
 import { Plus, Users, Trophy, Timer } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
   const { user, loading, signInAnonymously } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [isSigningIn, setIsSigningIn] = useState(false);
 
   useEffect(() => {
@@ -17,12 +19,24 @@ const Index = () => {
   }, [loading, user]);
 
   const handleSignIn = async () => {
+    if (isSigningIn) return; // Prevent multiple calls
+    
     setIsSigningIn(true);
-    const { error } = await signInAnonymously();
-    if (error) {
-      console.error('Error signing in:', error);
+    try {
+      const { error } = await signInAnonymously();
+      if (error) {
+        console.error('Error signing in:', error);
+        toast({
+          title: "Authentication Error",
+          description: "Please try refreshing the page. Using temporary authentication.",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      console.error('Unexpected error during sign-in:', err);
+    } finally {
+      setIsSigningIn(false);
     }
-    setIsSigningIn(false);
   };
 
   const handleCreateRoom = () => {
