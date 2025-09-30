@@ -144,12 +144,18 @@ async function makeBiddingDecision(supabaseClient: any, roomId: string, aiTeams:
   const currentHighBid = currentAuction.high_bid_cr || currentAuction.base_cr;
   const currentHighBidder = currentAuction.high_team_id;
 
+  // Get team rosters to analyze composition
+  const { data: rosters } = await supabaseClient
+    .from('roster')
+    .select('team_id, role, is_overseas')
+    .eq('room_id', roomId);
+
   // Filter AI teams that can bid (have budget, slots, and aren't current high bidder)
   const eligibleTeams = aiTeams.filter(team => {
-    const hasSlots = (team.slots_filled || 0) < (team.max_slots || 11);
+    const hasSlots = (team.slots_left || 11) > 0;
     const hasOverseasSlots = !currentPlayer.is_overseas || 
-      (team.overseas_slots_filled || 0) < (team.max_overseas_slots || 4);
-    const hasBudget = (team.budget || 0) > currentHighBid + 5; // Can afford minimum increment
+      (team.overseas_in_squad || 0) < (context.overseasMax || 8);
+    const hasBudget = (team.purse_left_cr || 0) > currentHighBid + 5;
     const notCurrentBidder = team.id !== currentHighBidder;
     
     return hasSlots && hasOverseasSlots && hasBudget && notCurrentBidder;
@@ -162,32 +168,109 @@ async function makeBiddingDecision(supabaseClient: any, roomId: string, aiTeams:
     };
   }
 
-  // Random decision making (simple logic)
-  const shouldBid = Math.random() > 0.4; // 60% chance to bid
+  // Calculate interest scores for each team
+  const teamScores = eligibleTeams.map(team => {
+    const teamRoster = rosters?.filter(r => r.team_id === team.id) || [];
+    const roleCount = teamRoster.filter(r => r.role === currentPlayer.role).length;
+    const budget = team.purse_left_cr || 0;
+    const slotsLeft = team.slots_left || 11;
+    
+    // Role need factor (need players in positions we lack)
+    const roleNeedFactor = roleCount < 3 ? 2 : roleCount < 5 ? 1.5 : 1;
+    
+    // Budget health factor (more willing to bid if we have budget)
+    const budgetHealthFactor = budget > 60 ? 2 : budget > 30 ? 1.5 : budget > 15 ? 1 : 0.5;
+    
+    // Urgency factor (need to fill slots)
+    const urgencyFactor = slotsLeft > 10 ? 1.2 : slotsLeft > 5 ? 1 : 0.8;
+    
+    // Player quality factor (based on base price and marquee status)
+    const qualityFactor = currentPlayer.is_marquee ? 2 : 
+                         (currentPlayer.base_price_cr || 0.2) > 1 ? 1.5 : 1;
+    
+    // Price sensitivity (less likely to bid if price is too high relative to budget)
+    const priceRatio = currentHighBid / budget;
+    const priceSensitivity = priceRatio > 0.4 ? 0.3 : priceRatio > 0.25 ? 0.6 : priceRatio > 0.15 ? 1 : 1.3;
+    
+    // Overseas preference (slightly prefer domestic to save overseas slots)
+    const overseasFactor = currentPlayer.is_overseas ? 0.9 : 1.1;
+    
+    const interestScore = roleNeedFactor * budgetHealthFactor * urgencyFactor * 
+                         qualityFactor * priceSensitivity * overseasFactor;
+    
+    return { team, interestScore };
+  });
+
+  // Sort teams by interest
+  teamScores.sort((a, b) => b.interestScore - a.interestScore);
   
-  if (!shouldBid) {
+  // Top interested teams (top 40% of interested teams will participate)
+  const activeTeams = teamScores.filter(ts => ts.interestScore > 0.5);
+  
+  if (activeTeams.length === 0) {
     return {
       action: 'skip',
-      reasoning: 'Free AI decided not to bid this round'
+      reasoning: 'No teams interested in this player'
     };
   }
 
-  // Select random team to bid
-  const biddingTeam = eligibleTeams[Math.floor(Math.random() * eligibleTeams.length)];
+  // Higher chance for more interested teams
+  const topTeam = activeTeams[0];
+  const bidProbability = Math.min(0.85, topTeam.interestScore * 0.4); // Max 85% chance
   
-  // Calculate bid amount (current + 5 to 15 cr increment)
-  const increment = 5 + Math.floor(Math.random() * 11); // 5-15 cr
+  if (Math.random() > bidProbability) {
+    return {
+      action: 'skip',
+      reasoning: 'AI teams not bidding this round'
+    };
+  }
+
+  // Select bidding team (weighted towards more interested teams)
+  const biddingTeam = Math.random() < 0.7 ? activeTeams[0].team :
+                      activeTeams[Math.floor(Math.random() * Math.min(3, activeTeams.length))].team;
+  
+  // Calculate strategic bid increment based on interest and competition
+  let increment = 5; // Base increment
+  
+  // Aggressive bidding for high-interest players
+  if (topTeam.interestScore > 2) {
+    increment = Math.random() < 0.4 ? 10 : Math.random() < 0.5 ? 15 : 5;
+  } else if (topTeam.interestScore > 1.5) {
+    increment = Math.random() < 0.3 ? 10 : 5;
+  }
+  
+  // Occasionally make big jumps for star players (IPL style)
+  if (currentPlayer.is_marquee && Math.random() < 0.25 && biddingTeam.purse_left_cr > 40) {
+    increment = Math.random() < 0.5 ? 20 : 25;
+  }
+  
+  // Scale increment based on current price (higher prices = bigger increments)
+  if (currentHighBid > 30) {
+    increment = Math.max(increment, 10);
+  } else if (currentHighBid > 50) {
+    increment = Math.max(increment, 15);
+  }
+  
   const bidAmount = currentHighBid + increment;
   
-  // Ensure bid doesn't exceed team budget
-  const finalBidAmount = Math.min(bidAmount, biddingTeam.budget - 5); // Keep 5cr buffer
+  // Ensure bid doesn't exceed team budget (keep buffer for remaining slots)
+  const requiredBuffer = Math.max(5, (biddingTeam.slots_left - 1) * 0.2);
+  const maxAffordable = biddingTeam.purse_left_cr - requiredBuffer;
+  const finalBidAmount = Math.min(bidAmount, maxAffordable);
 
-  console.log(`Free AI team ${biddingTeam.team_name} bidding ${finalBidAmount} cr`);
+  if (finalBidAmount <= currentHighBid) {
+    return {
+      action: 'skip',
+      reasoning: 'Cannot afford to bid higher'
+    };
+  }
+
+  console.log(`AI team ${biddingTeam.nickname} bidding ${finalBidAmount} cr (interest: ${topTeam.interestScore.toFixed(2)})`);
 
   return {
     action: 'bid',
     bidAmount: finalBidAmount,
     teamId: biddingTeam.id,
-    reasoning: `Free AI team ${biddingTeam.team_name} bid ${finalBidAmount} cr`
+    reasoning: `AI bid ₹${finalBidAmount} Cr for ${currentPlayer.name}`
   };
 }
